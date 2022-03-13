@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { CONFIG } from "../config";
 import { ReactComponent as HeartIcon } from "../images/heart.svg";
 
-export const MatchesDisplay = () => {
+export const MatchesDisplay = ({ onClick }) => {
   const [matches, setMatches] = useState([]);
 
   useEffect(() => {
@@ -23,9 +23,10 @@ export const MatchesDisplay = () => {
       {hasMatches ? (
         <div className="flex flex-col gap-4 p-4">
           {matches.map((match) => (
-            <div
+            <button
               key={match.user_id}
-              className="flex items-center shadow p-4 gap-4 bg-white rounded-lg"
+              className="flex items-center shadow p-4 gap-4 bg-white rounded-lg hover:shadow-md"
+              onClick={() => onClick(match)}
             >
               <img
                 src={match.url}
@@ -34,7 +35,7 @@ export const MatchesDisplay = () => {
               />
               {match.first_name}
               <HeartIcon className="ml-auto text-red-600 h-6 w-6" />
-            </div>
+            </button>
           ))}
         </div>
       ) : (

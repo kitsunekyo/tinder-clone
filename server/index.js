@@ -212,6 +212,39 @@ app.get("/matches", async (req, res) => {
   return res.json(sanitizedMatches);
 });
 
+app.get("/messages/:partnerId", async (req, res) => {
+  const db = await getDb();
+  const userId = req.user.userId;
+  const partnerId = req.params.partnerId;
+
+  const messages = await db
+    .collection("messages")
+    .find({
+      $or: [
+        { from_userId: userId, to_userId: partnerId },
+        { from_userId: partnerId, to_userId: userId },
+      ],
+    })
+    .toArray();
+
+  return res.json(messages);
+});
+
+app.post("/messages", async (req, res) => {
+  const { to_userId, message } = req.body;
+  const from_userId = req.user.userId;
+
+  const db = await getDb();
+  const messageDocs = db.collection("messages");
+  const newMessage = await messageDocs.insertOne({
+    from_userId,
+    to_userId,
+    message,
+    timestamp: new Date().toUTCString(),
+  });
+  return res.status(201).send();
+});
+
 const server = app.listen(PORT, async () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
