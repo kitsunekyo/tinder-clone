@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Nav } from "../components/Nav";
+import { CONFIG } from "../config";
+import { useAuth } from "../AuthProvider";
 
 export const Onboarding = () => {
+  const { user, setUser } = useAuth();
+
   const [formData, setFormData] = useState({
-    user_id: "",
     first_name: "",
     dob_day: "",
     dob_month: "",
@@ -11,21 +14,46 @@ export const Onboarding = () => {
     show_gender: false,
     gender_identity: "man",
     gender_interest: "woman",
-    email: "",
     url: "",
     about: "",
-    matches: [],
   });
-  const handleSubmit = (e) => {
+
+  useEffect(() => {
+    setFormData({
+      first_name: user?.first_name || "",
+      dob_day: user?.dob_day || "",
+      dob_month: user?.dob_month || "",
+      dob_year: user?.dob_year || "",
+      show_gender: user?.show_gender !== null ? user?.show_gender : false,
+      gender_identity: user?.gender_identity || "man",
+      gender_interest: user?.gender_interest || "woman",
+      url: user?.url || "",
+      about: user?.about || "",
+    });
+  }, [user]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const res = await fetch(`${CONFIG.apiUrl}/me`, {
+      method: "put",
+      body: JSON.stringify(formData),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (res.status === 204) {
+      setUser({ ...user, ...formData });
+    }
   };
 
   const handleChange = (e) => {
     const value =
       e.target.type === "checkbox" ? e.target.checked : e.target.value;
     const name = e.target.name;
-
-    console.log({ name, value });
 
     setFormData((prev) => ({
       ...prev,
@@ -215,7 +243,6 @@ export const Onboarding = () => {
                 className="input"
                 value={formData.url}
                 onChange={handleChange}
-                required={true}
               />
               {formData.url !== "" ? (
                 <div className="pt-6">

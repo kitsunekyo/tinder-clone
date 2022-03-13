@@ -4,6 +4,7 @@ import { CONFIG } from "./config";
 
 export const authContext = createContext({
   user: [],
+  setUser: (user) => {},
   login: () => {},
   logout: () => {},
 });
@@ -48,7 +49,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <authContext.Provider value={{ user, login, logout }}>
+    <authContext.Provider value={{ user, login, logout, setUser }}>
       {children}
     </authContext.Provider>
   );
