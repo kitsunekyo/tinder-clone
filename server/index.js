@@ -7,6 +7,8 @@ const { MongoClient } = require("mongodb");
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
+const requireAuth = require("./middleware/requireAuth");
+
 const uri = process.env.CONNECTION_STRING;
 const PORT = 8000;
 const SECRET = process.env.SECRET;
@@ -171,142 +173,111 @@ app.put("/me", async (req, res) => {
   }
 });
 
-app.get("/users", async (req, res) => {
+app.get("/users", requireAuth, async (req, res) => {
   const client = new MongoClient(uri);
-  const token = req.cookies["access-token"];
-  if (!token) {
-    return res.status(401).json({ message: "No token provided" });
-  }
 
-  jwt.verify(token, SECRET, async (error, decoded) => {
-    if (error) {
-      return res.status(403).json({ message: "Invalid token" });
-    }
+  const requestingUserId = req.user.userId;
+  const genderFilter = req.query.gender;
 
-    const requestingUserId = decoded.sub;
-    const genderFilter = req.query.gender;
-
-    const filter = {
-      ...(genderFilter
-        ? {
-            user_id: { $ne: requestingUserId },
-            gender_identity: { $eq: genderFilter },
-          }
-        : undefined),
-    };
-
-    try {
-      await client.connect();
-      const db = client.db("tinderclone");
-      const userDocs = db.collection("users");
-
-      const requestingUser = await userDocs.findOne({
-        user_id: requestingUserId,
-      });
-      const users = await userDocs.find(filter).toArray();
-
-      const potentialMatches = users.filter(
-        (user) =>
-          !requestingUser.likes.includes(user.user_id) &&
-          !requestingUser.dislikes.includes(user.user_id)
-      );
-
-      return res.json(potentialMatches);
-    } catch (e) {
-      return res.status(500).json(e);
-    } finally {
-      await client.close();
-    }
-  });
-});
-
-app.post("/swipe", async (req, res) => {
-  const client = new MongoClient(uri);
-  const token = req.cookies["access-token"];
-  if (!token) {
-    return res.status(401).json({ message: "No token provided" });
-  }
-
-  jwt.verify(token, SECRET, async (error, decoded) => {
-    if (error) {
-      return res.status(403).json({ message: "Invalid token" });
-    }
-
-    const userId = decoded.sub;
-    const { swipedUserId, result } = req.body;
-
-    if (!swipedUserId || !result) {
-      return res.status(400).json({ message: "Invalid body" });
-    }
-
-    try {
-      await client.connect();
-      const db = client.db("tinderclone");
-      const userDocs = db.collection("users");
-
-      const user = await userDocs.findOneAndUpdate(
-        { user_id: userId },
-        {
-          $push: {
-            [result === "like" ? "likes" : "dislikes"]: swipedUserId,
-          },
+  const filter = {
+    ...(genderFilter
+      ? {
+          user_id: { $ne: requestingUserId },
+          gender_identity: { $eq: genderFilter },
         }
-      );
+      : undefined),
+  };
 
-      if (!user) {
-        return res.status(404).json({ message: "Could not find user" });
-      }
+  try {
+    await client.connect();
+    const db = client.db("tinderclone");
+    const userDocs = db.collection("users");
 
-      return res.status(201).send();
-    } catch (e) {
-      return res.status(500).json(e);
-    } finally {
-      await client.close();
-    }
-  });
+    const requestingUser = await userDocs.findOne({
+      user_id: requestingUserId,
+    });
+    const users = await userDocs.find(filter).toArray();
+
+    const potentialMatches = users.filter(
+      (user) =>
+        !requestingUser.likes.includes(user.user_id) &&
+        !requestingUser.dislikes.includes(user.user_id)
+    );
+
+    return res.json(potentialMatches);
+  } catch (e) {
+    return res.status(500).json(e);
+  } finally {
+    await client.close();
+  }
 });
 
-app.get("/matches", (req, res) => {
+app.post("/swipe", requireAuth, async (req, res) => {
   const client = new MongoClient(uri);
-  const token = req.cookies["access-token"];
-  if (!token) {
-    return res.status(401).json({ message: "No token provided" });
+
+  const userId = req.user.userId;
+  const { swipedUserId, result } = req.body;
+
+  if (!swipedUserId || !result) {
+    return res.status(400).json({ message: "Invalid body" });
   }
 
-  jwt.verify(token, SECRET, async (error, decoded) => {
-    if (error) {
-      return res.status(403).json({ message: "Invalid token" });
+  try {
+    await client.connect();
+    const db = client.db("tinderclone");
+    const userDocs = db.collection("users");
+
+    const user = await userDocs.findOneAndUpdate(
+      { user_id: userId },
+      {
+        $push: {
+          [result === "like" ? "likes" : "dislikes"]: swipedUserId,
+        },
+      }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "Could not find user" });
     }
 
-    const userId = decoded.sub;
+    return res.status(201).send();
+  } catch (e) {
+    return res.status(500).json(e);
+  } finally {
+    await client.close();
+  }
+});
 
-    try {
-      await client.connect();
-      const db = client.db("tinderclone");
-      const userDocs = db.collection("users");
+app.get("/matches", requireAuth, async (req, res) => {
+  const client = new MongoClient(uri);
+  const userId = req.user.userId;
 
-      const user = await userDocs.findOne({ user_id: userId });
-      const likedUsers = await userDocs
-        .find({ user_id: { $in: user.likes } })
-        .toArray();
-      const matches = likedUsers.filter(
-        (match) => Array.isArray(match.likes) && match.likes.includes(userId)
-      );
+  try {
+    await client.connect();
+    const db = client.db("tinderclone");
+    const userDocs = db.collection("users");
 
-      const sanitizedMatches = matches.map(({ user_id, url, first_name }) => ({
-        user_id,
-        url,
-        first_name,
-      }));
+    const user = await userDocs.findOne({ user_id: userId });
+    const likedUsers = await userDocs
+      .find({ user_id: { $in: user.likes } })
+      .toArray();
+    const matches = likedUsers.filter(
+      (match) => Array.isArray(match.likes) && match.likes.includes(userId)
+    );
 
-      return res.json(sanitizedMatches);
-    } catch (e) {
-      console.log(e);
-      return res.status(500).json(e);
-    } finally {
-      await client.close();
-    }
-  });
+    const sanitizedMatches = matches.map(({ user_id, url, first_name }) => ({
+      user_id,
+      url,
+      first_name,
+    }));
+
+    return res.json(sanitizedMatches);
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json(e);
+  } finally {
+    await client.close();
+  }
 });
 
 app.listen(PORT, () => {
