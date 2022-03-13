@@ -27,7 +27,7 @@ export const AuthModal = ({ onClose, isSignUp }) => {
       }
       navigate("/dashboard");
     } catch (e) {
-      console.log("something went wrong");
+      console.log("something went wrong", e);
     }
   };
 

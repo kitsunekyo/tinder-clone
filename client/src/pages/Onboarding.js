@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Nav } from "../components/Nav";
-import { CONFIG } from "../config";
 import { useAuth } from "../AuthProvider";
+import { fetchApi } from "../utils/api";
 
 export const Onboarding = () => {
   const { user, setUser } = useAuth();
@@ -37,14 +37,9 @@ export const Onboarding = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch(`${CONFIG.apiUrl}/me`, {
+    const res = await fetchApi(`/me`, {
       method: "put",
-      body: JSON.stringify(formData),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      credentials: "include",
+      body: formData,
     });
 
     if (res.status === 204) {

@@ -5,8 +5,8 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
 import { CONFIG } from "./config";
+import { fetchApi } from "./utils/api";
 
 export const authContext = createContext({
   user: [],
@@ -18,7 +18,6 @@ export const authContext = createContext({
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loaded, setLoaded] = useState(false);
-  const navigate = useNavigate();
 
   const getUser = useCallback(async () => {
     try {
@@ -47,26 +46,20 @@ export const AuthProvider = ({ children }) => {
   }, [getUser]);
 
   const logout = async () => {
-    await fetch(`${CONFIG.apiUrl}/logout`, {
+    await fetchApi(`/logout`, {
       method: "post",
-      credentials: "include",
     });
     setUser(null);
-    navigate("/");
   };
 
   const login = async (email, password, isSignUp = false) => {
     const path = isSignUp ? "/signup" : "/login";
 
-    const response = await fetch(`${CONFIG.apiUrl}${path}`, {
+    const response = await fetchApi(path, {
       method: "post",
-      body: JSON.stringify({ email, password }),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      credentials: "include",
+      body: { email, password },
     });
+
     const success = response.status === 201;
 
     if (success) {

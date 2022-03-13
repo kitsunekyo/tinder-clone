@@ -24,7 +24,8 @@ export const MatchesDisplay = ({ onClick, matches, onUnmatched }) => {
       {hasMatches ? (
         <div className="flex flex-col gap-4 p-4">
           {matches.map((match) => (
-            <button
+            <div
+              role="button"
               key={match.user_id}
               className="flex items-center shadow p-4 gap-4 bg-white rounded-lg hover:shadow-md"
               onClick={() => onClick(match)}
@@ -44,7 +45,7 @@ export const MatchesDisplay = ({ onClick, matches, onUnmatched }) => {
               >
                 <BackspaceIcon className="text-red-600 h-6 w-6" />
               </button>
-            </button>
+            </div>
           ))}
         </div>
       ) : (

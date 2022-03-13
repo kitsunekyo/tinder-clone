@@ -1,38 +1,19 @@
-import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import TinderCard from "react-tinder-card";
 
-import { CONFIG } from "../config";
-import { useAuth } from "../AuthProvider";
 import { ChatContainer } from "../components/ChatContainer";
+import { fetchApi } from "../utils/api";
+
+import { useGetMatches } from "../hooks/useGetMatches";
+import { useGetUsers } from "../hooks/useGetUsers";
 
 export const Dashboard = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [users, setUsers] = useState([]);
-  const [matches, setMatches] = useState([]);
-
-  const getMatches = useCallback(async () => {
-    const res = await fetch(`${CONFIG.apiUrl}/matches`, {
-      credentials: "include",
-    });
-    const data = await res.json();
-    setMatches(data);
-  }, []);
-
-  useEffect(() => {
-    getMatches();
-  }, [getMatches]);
+  const { matches, getMatches } = useGetMatches();
+  const { users, getUsers } = useGetUsers();
 
   const setSwipe = async (swipedUserId, result) => {
-    await fetch(`${CONFIG.apiUrl}/swipe`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({ swipedUserId, result }),
+    await fetchApi(`/swipe`, {
+      method: "post",
+      body: { swipedUserId, result },
     });
 
     getUsers();
@@ -48,35 +29,10 @@ export const Dashboard = () => {
     console.log(name + " left the screen!");
   };
 
-  const getUsers = useCallback(async () => {
-    const genderInterest = user.gender_interest;
-    const url = new URL(`${CONFIG.apiUrl}/users`);
-    const params = { gender: genderInterest };
-    Object.keys(params).forEach((key) =>
-      url.searchParams.append(key, params[key])
-    );
-
-    const res = await fetch(url, {
-      credentials: "include",
-    });
-    const data = await res.json();
-    setUsers(data);
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-    getUsers();
-  }, [user, getUsers]);
-
   const handleUpdate = () => {
     getMatches();
     getUsers();
   };
-
-  if (!user) {
-    navigate("/");
-    return null;
-  }
 
   return (
     <div className="flex gap-6">
