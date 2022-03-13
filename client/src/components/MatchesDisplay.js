@@ -1,3 +1,14 @@
+import { useAuth } from "../AuthProvider";
+
 export const MatchesDisplay = () => {
-  return <div></div>;
+  const { user } = useAuth();
+  return (
+    <div>
+      {user.matches
+        ? user.matches.map((match) => (
+            <div key={match.id}>{match.first_name}</div>
+          ))
+        : "No matches yet"}
+    </div>
+  );
 };

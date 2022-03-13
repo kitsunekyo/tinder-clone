@@ -2,7 +2,7 @@ import { useAuth } from "../AuthProvider";
 import { ReactComponent as LogoutIcon } from "../images/logout.svg";
 
 export const ChatHeader = () => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleLogout = async () => {
     logout();
@@ -10,13 +10,11 @@ export const ChatHeader = () => {
 
   return (
     <div className="bg-gradient-to-tr from-pink-600 to-orange-600 h-24 flex items-center p-6 gap-4">
-      <img
-        src="https://i.pravatar.cc/300"
-        alt=""
-        className="rounded-full h-12 w-12"
-      />
+      {user.url && (
+        <img src={user.url} alt="" className="rounded-full h-12 w-12" />
+      )}
 
-      <h3 className="text-white">username</h3>
+      <h3 className="text-white">{user.first_name}</h3>
 
       <button
         onClick={handleLogout}
