@@ -12,7 +12,7 @@ export const Dashboard = () => {
   const [users, setUsers] = useState([]);
 
   const updateMatches = async (swipedUserId, result) => {
-    await fetch(`${CONFIG.apiUrl}/users/${user.user_id}/swipe`, {
+    await fetch(`${CONFIG.apiUrl}/swipe`, {
       method: "POST",
       credentials: "include",
       headers: {

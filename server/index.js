@@ -220,39 +220,93 @@ app.get("/users", async (req, res) => {
   });
 });
 
-app.post("/users/:userId/swipe", async (req, res) => {
+app.post("/swipe", async (req, res) => {
   const client = new MongoClient(uri);
-  const { userId } = req.params;
-  const { swipedUserId, result } = req.body;
-
-  if (!swipedUserId || !result) {
-    return res.status(400).json({ message: "Invalid body" });
+  const token = req.cookies["access-token"];
+  if (!token) {
+    return res.status(401).json({ message: "No token provided" });
   }
 
-  try {
-    await client.connect();
-    const db = client.db("tinderclone");
-    const userDocs = db.collection("users");
-
-    const user = await userDocs.findOneAndUpdate(
-      { user_id: userId },
-      {
-        $push: {
-          [result === "like" ? "likes" : "dislikes"]: swipedUserId,
-        },
-      }
-    );
-
-    if (!user) {
-      return res.status(404).json({ message: "Could not find user" });
+  jwt.verify(token, SECRET, async (error, decoded) => {
+    if (error) {
+      return res.status(403).json({ message: "Invalid token" });
     }
 
-    return res.status(201).send();
-  } catch (e) {
-    return res.status(500).json(e);
-  } finally {
-    await client.close();
+    const userId = decoded.sub;
+    const { swipedUserId, result } = req.body;
+
+    if (!swipedUserId || !result) {
+      return res.status(400).json({ message: "Invalid body" });
+    }
+
+    try {
+      await client.connect();
+      const db = client.db("tinderclone");
+      const userDocs = db.collection("users");
+
+      const user = await userDocs.findOneAndUpdate(
+        { user_id: userId },
+        {
+          $push: {
+            [result === "like" ? "likes" : "dislikes"]: swipedUserId,
+          },
+        }
+      );
+
+      if (!user) {
+        return res.status(404).json({ message: "Could not find user" });
+      }
+
+      return res.status(201).send();
+    } catch (e) {
+      return res.status(500).json(e);
+    } finally {
+      await client.close();
+    }
+  });
+});
+
+app.get("/matches", (req, res) => {
+  const client = new MongoClient(uri);
+  const token = req.cookies["access-token"];
+  if (!token) {
+    return res.status(401).json({ message: "No token provided" });
   }
+
+  jwt.verify(token, SECRET, async (error, decoded) => {
+    if (error) {
+      return res.status(403).json({ message: "Invalid token" });
+    }
+
+    const userId = decoded.sub;
+
+    try {
+      await client.connect();
+      const db = client.db("tinderclone");
+      const userDocs = db.collection("users");
+
+      const user = await userDocs.findOne({ user_id: userId });
+      const likedUsers = await userDocs
+        .find({ user_id: { $in: user.likes } })
+        .toArray();
+      const matches = likedUsers.filter(
+        (match) => Array.isArray(match.likes) && match.likes.includes(userId)
+      );
+
+      const sanitizedMatches = matches.map(({ user_id, url, first_name }) => ({
+        user_id,
+        url,
+        first_name,
+      }));
+
+      return res.json(sanitizedMatches);
+    } catch (e) {
+      console.log(e);
+      return res.status(500).json(e);
+    } finally {
+      await client.close();
+    }
+  });
 });
 
 app.listen(PORT, () => {
