@@ -173,38 +173,81 @@ app.put("/me", async (req, res) => {
 
 app.get("/users", async (req, res) => {
   const client = new MongoClient(uri);
-
-  const genderFilter = req.query.gender;
-  const filter = {
-    ...(genderFilter ? { gender_identity: { $eq: genderFilter } } : undefined),
-  };
-
-  try {
-    await client.connect();
-    const db = client.db("tinderclone");
-    const userDocs = db.collection("users");
-
-    const users = await userDocs.find(filter).toArray();
-
-    return res.json(users);
-  } catch (e) {
-    return res.status(500).json(e);
-  } finally {
-    await client.close();
+  const token = req.cookies["access-token"];
+  if (!token) {
+    return res.status(401).json({ message: "No token provided" });
   }
+
+  jwt.verify(token, SECRET, async (error, decoded) => {
+    if (error) {
+      return res.status(403).json({ message: "Invalid token" });
+    }
+
+    const requestingUserId = decoded.sub;
+    const genderFilter = req.query.gender;
+
+    const filter = {
+      ...(genderFilter
+        ? {
+            user_id: { $ne: requestingUserId },
+            gender_identity: { $eq: genderFilter },
+          }
+        : undefined),
+    };
+
+    try {
+      await client.connect();
+      const db = client.db("tinderclone");
+      const userDocs = db.collection("users");
+
+      const requestingUser = await userDocs.findOne({
+        user_id: requestingUserId,
+      });
+      const users = await userDocs.find(filter).toArray();
+
+      const potentialMatches = users.filter(
+        (user) =>
+          !requestingUser.likes.includes(user.user_id) &&
+          !requestingUser.dislikes.includes(user.user_id)
+      );
+
+      return res.json(potentialMatches);
+    } catch (e) {
+      return res.status(500).json(e);
+    } finally {
+      await client.close();
+    }
+  });
 });
 
-app.get("/users", async (req, res) => {
+app.post("/users/:userId/swipe", async (req, res) => {
   const client = new MongoClient(uri);
+  const { userId } = req.params;
+  const { swipedUserId, result } = req.body;
+
+  if (!swipedUserId || !result) {
+    return res.status(400).json({ message: "Invalid body" });
+  }
 
   try {
     await client.connect();
     const db = client.db("tinderclone");
     const userDocs = db.collection("users");
 
-    const users = await userDocs.find().toArray();
+    const user = await userDocs.findOneAndUpdate(
+      { user_id: userId },
+      {
+        $push: {
+          [result === "like" ? "likes" : "dislikes"]: swipedUserId,
+        },
+      }
+    );
 
-    return res.json(users);
+    if (!user) {
+      return res.status(404).json({ message: "Could not find user" });
+    }
+
+    return res.status(201).send();
   } catch (e) {
     return res.status(500).json(e);
   } finally {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import TinderCard from "react-tinder-card";
 
@@ -10,35 +10,49 @@ export const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
-  const [lastDirection, setLastDirection] = useState(null);
 
-  const swiped = (direction, nameToDelete) => {
-    console.log("removing: " + nameToDelete);
-    setLastDirection(direction);
+  const updateMatches = async (swipedUserId, result) => {
+    await fetch(`${CONFIG.apiUrl}/users/${user.user_id}/swipe`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ swipedUserId, result }),
+    });
+
+    getUsersByGender(user.user_id, user.gender_interest);
+  };
+
+  const swiped = (direction, userId) => {
+    const result = direction === "right" ? "like" : "dislike";
+    updateMatches(userId, result);
   };
 
   const outOfFrame = (name) => {
     console.log(name + " left the screen!");
   };
 
-  useEffect(() => {
-    if (!user) return;
-
+  const getUsersByGender = useCallback(async (userId, genderInterest) => {
     const url = new URL(`${CONFIG.apiUrl}/users`);
-    const params = { gender: user?.gender_interest };
+    const params = { gender: genderInterest };
     Object.keys(params).forEach((key) =>
       url.searchParams.append(key, params[key])
     );
 
-    const getUsersByGender = async () => {
-      const res = await fetch(url, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      setUsers(data.filter((u) => u.user_id !== user.user_id));
-    };
-    getUsersByGender();
-  }, [user]);
+    const res = await fetch(url, {
+      credentials: "include",
+    });
+    const data = await res.json();
+    setUsers(data);
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    getUsersByGender(user.user_id, user.gender_interest);
+  }, [user, getUsersByGender]);
 
   if (!user) {
     navigate("/");
@@ -57,7 +71,7 @@ export const Dashboard = () => {
             <TinderCard
               className="absolute"
               key={user.first_name}
-              onSwipe={(direction) => swiped(direction, user.first_name)}
+              onSwipe={(direction) => swiped(direction, user.user_id)}
               onCardLeftScreen={() => outOfFrame(user.first_name)}
             >
               <div
@@ -68,11 +82,6 @@ export const Dashboard = () => {
               </div>
             </TinderCard>
           ))}
-        </div>
-        <div className="h-8 flex items-center">
-          {lastDirection && (
-            <p className="text-center text-xl">You swiped {lastDirection}</p>
-          )}
         </div>
       </div>
     </div>
