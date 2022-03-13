@@ -62,10 +62,6 @@ app.post("/signup", async (req, res) => {
     .send();
 });
 
-app.post("/logout", (req, res) => {
-  return res.clearCookie("access-token").end();
-});
-
 app.post("/login", async (req, res) => {
   const db = await getDb();
 
@@ -99,7 +95,13 @@ app.post("/login", async (req, res) => {
     .send();
 });
 
-app.get("/me", requireAuth, async (req, res) => {
+app.use(requireAuth);
+
+app.post("/logout", (req, res) => {
+  return res.clearCookie("access-token").end();
+});
+
+app.get("/me", async (req, res) => {
   const db = await getDb();
 
   const users = await db.collection("users");
@@ -114,7 +116,7 @@ app.get("/me", requireAuth, async (req, res) => {
   res.json(safeUser);
 });
 
-app.put("/me", requireAuth, async (req, res) => {
+app.put("/me", async (req, res) => {
   const db = await getDb();
 
   const userDocs = db.collection("users");
@@ -129,7 +131,7 @@ app.put("/me", requireAuth, async (req, res) => {
   return res.status(204).send();
 });
 
-app.get("/users", requireAuth, async (req, res) => {
+app.get("/users", async (req, res) => {
   const db = await getDb();
 
   const requestingUserId = req.user.userId;
@@ -160,7 +162,7 @@ app.get("/users", requireAuth, async (req, res) => {
   return res.json(potentialMatches);
 });
 
-app.post("/swipe", requireAuth, async (req, res) => {
+app.post("/swipe", async (req, res) => {
   const db = await getDb();
 
   const userId = req.user.userId;
@@ -188,7 +190,7 @@ app.post("/swipe", requireAuth, async (req, res) => {
   return res.status(201).send();
 });
 
-app.get("/matches", requireAuth, async (req, res) => {
+app.get("/matches", async (req, res) => {
   const db = await getDb();
   const userId = req.user.userId;
   const userDocs = db.collection("users");
