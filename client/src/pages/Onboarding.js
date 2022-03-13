@@ -24,7 +24,7 @@ export const Onboarding = () => {
       dob_day: user?.dob_day || "",
       dob_month: user?.dob_month || "",
       dob_year: user?.dob_year || "",
-      show_gender: user?.show_gender !== null ? user?.show_gender : false,
+      show_gender: user?.show_gender !== undefined ? user?.show_gender : false,
       gender_identity: user?.gender_identity || "man",
       gender_interest: user?.gender_interest || "woman",
       url: user?.url || "",

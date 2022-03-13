@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
         });
         if (res.status !== 200) {
           console.log("User is not logged in");
+          navigate("/");
           return;
         }
 
