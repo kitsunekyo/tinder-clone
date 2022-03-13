@@ -20,7 +20,6 @@ export const AuthProvider = ({ children }) => {
         });
         if (res.status !== 200) {
           console.log("User is not logged in");
-          navigate("/");
           return;
         }
 
@@ -35,7 +34,7 @@ export const AuthProvider = ({ children }) => {
       }
     }
     getUser();
-  }, [navigate]);
+  }, []);
 
   const logout = async () => {
     await fetch(`${CONFIG.apiUrl}/logout`, {

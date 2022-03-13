@@ -66,7 +66,7 @@ export const Onboarding = () => {
       <Nav minimal={true} setShowModal={() => {}} />
 
       <div className="p-6">
-        <h2 className="title">Create account</h2>
+        <h2 className="title">Update Profile</h2>
 
         <form onSubmit={handleSubmit}>
           <div className="flex gap-6">
