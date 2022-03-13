@@ -5,6 +5,8 @@ import { useAuth } from "../AuthProvider";
 
 export const Onboarding = () => {
   const { user, setUser } = useAuth();
+  const [message, setMessage] = useState();
+  const [error, setError] = useState();
 
   const [formData, setFormData] = useState({
     first_name: "",
@@ -47,6 +49,9 @@ export const Onboarding = () => {
 
     if (res.status === 204) {
       setUser({ ...user, ...formData });
+      setMessage("Profile updated successfully");
+    } else {
+      setError("Could not update profile");
     }
   };
 
@@ -230,6 +235,10 @@ export const Onboarding = () => {
                 value="Submit"
                 className="btn--tertiary block w-full"
               />
+              {message && (
+                <p className="text-center text-green-600 p-4">{message}</p>
+              )}
+              {error && <p className="text-center text-red-600 p-4">{error}</p>}
             </section>
 
             <section className="flex-1">
