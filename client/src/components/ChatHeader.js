@@ -1,20 +1,11 @@
-import { useNavigate } from "react-router-dom";
-import { CONFIG } from "../config";
+import { useAuth } from "../AuthProvider";
 import { ReactComponent as LogoutIcon } from "../images/logout.svg";
 
 export const ChatHeader = () => {
-  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
-    await fetch(`${CONFIG.apiUrl}/logout`, {
-      method: "post",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-    navigate("/");
+    logout();
   };
 
   return (
