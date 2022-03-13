@@ -191,6 +191,34 @@ app.post("/swipe", async (req, res) => {
   return res.status(201).send();
 });
 
+app.delete("/matches", async (req, res) => {
+  const db = await getDb();
+
+  const userId = req.user.userId;
+  const { unmatchUserId } = req.body;
+
+  if (!unmatchUserId) {
+    return res.status(400).json({ message: "Invalid body" });
+  }
+
+  const userDocs = db.collection("users");
+
+  const user = await userDocs.findOneAndUpdate(
+    { user_id: userId },
+    {
+      $pull: {
+        likes: unmatchUserId,
+      },
+    }
+  );
+
+  if (!user) {
+    return res.status(404).json({ message: "Could not find user" });
+  }
+
+  return res.status(200).send();
+});
+
 app.get("/matches", async (req, res) => {
   const db = await getDb();
   const userId = req.user.userId;

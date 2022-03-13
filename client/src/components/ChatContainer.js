@@ -4,7 +4,7 @@ import { ChatHeader } from "../components/ChatHeader";
 import { MatchesDisplay } from "../components/MatchesDisplay";
 import { ChatDisplay } from "../components/ChatDisplay";
 
-export const ChatContainer = () => {
+export const ChatContainer = ({ matches, onUpdate }) => {
   const [selectedUser, setSelectedUser] = useState(null);
 
   const handleSelectMatch = (match) => {
@@ -30,7 +30,13 @@ export const ChatContainer = () => {
         </button>
       </div>
 
-      {!selectedUser && <MatchesDisplay onClick={handleSelectMatch} />}
+      {!selectedUser && (
+        <MatchesDisplay
+          onClick={handleSelectMatch}
+          matches={matches}
+          onUnmatched={onUpdate}
+        />
+      )}
       {selectedUser && <ChatDisplay partnerId={selectedUser} />}
     </div>
   );

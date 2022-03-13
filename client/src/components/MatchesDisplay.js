@@ -1,22 +1,23 @@
-import { useEffect, useState } from "react";
+import { ReactComponent as BackspaceIcon } from "../images/backspace.svg";
 import { CONFIG } from "../config";
-import { ReactComponent as HeartIcon } from "../images/heart.svg";
 
-export const MatchesDisplay = ({ onClick }) => {
-  const [matches, setMatches] = useState([]);
-
-  useEffect(() => {
-    async function getMatches() {
-      const res = await fetch(`${CONFIG.apiUrl}/matches`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      setMatches(data);
-    }
-    getMatches();
-  }, []);
-
+export const MatchesDisplay = ({ onClick, matches, onUnmatched }) => {
   const hasMatches = matches?.length > 0;
+
+  const handleUnmatch = async (userId) => {
+    const res = await fetch(`${CONFIG.apiUrl}/matches`, {
+      method: "delete",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ unmatchUserId: userId }),
+    });
+    if (res.status === 200) {
+      onUnmatched();
+    }
+  };
 
   return (
     <div className="bg-gray-100 flex-grow overflow-x-auto">
@@ -34,7 +35,15 @@ export const MatchesDisplay = ({ onClick }) => {
                 className="h-8 w-8 rounded-full bg-cover bg-center"
               />
               {match.first_name}
-              <HeartIcon className="ml-auto text-red-600 h-6 w-6" />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleUnmatch(match.user_id);
+                }}
+                className="ml-auto w-9 h-9 grid place-items-center hover:bg-gray-100 rounded-lg"
+              >
+                <BackspaceIcon className="text-red-600 h-6 w-6" />
+              </button>
             </button>
           ))}
         </div>

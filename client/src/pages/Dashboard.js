@@ -10,8 +10,21 @@ export const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
+  const [matches, setMatches] = useState([]);
 
-  const updateMatches = async (swipedUserId, result) => {
+  const getMatches = useCallback(async () => {
+    const res = await fetch(`${CONFIG.apiUrl}/matches`, {
+      credentials: "include",
+    });
+    const data = await res.json();
+    setMatches(data);
+  }, []);
+
+  useEffect(() => {
+    getMatches();
+  }, [getMatches]);
+
+  const setSwipe = async (swipedUserId, result) => {
     await fetch(`${CONFIG.apiUrl}/swipe`, {
       method: "POST",
       credentials: "include",
@@ -22,19 +35,21 @@ export const Dashboard = () => {
       body: JSON.stringify({ swipedUserId, result }),
     });
 
-    getUsersByGender(user.user_id, user.gender_interest);
+    getUsers();
+    getMatches();
   };
 
   const swiped = (direction, userId) => {
     const result = direction === "right" ? "like" : "dislike";
-    updateMatches(userId, result);
+    setSwipe(userId, result);
   };
 
   const outOfFrame = (name) => {
     console.log(name + " left the screen!");
   };
 
-  const getUsersByGender = useCallback(async (userId, genderInterest) => {
+  const getUsers = useCallback(async () => {
+    const genderInterest = user.gender_interest;
     const url = new URL(`${CONFIG.apiUrl}/users`);
     const params = { gender: genderInterest };
     Object.keys(params).forEach((key) =>
@@ -46,13 +61,17 @@ export const Dashboard = () => {
     });
     const data = await res.json();
     setUsers(data);
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
+    getUsers();
+  }, [user, getUsers]);
 
-    getUsersByGender(user.user_id, user.gender_interest);
-  }, [user, getUsersByGender]);
+  const handleUpdate = () => {
+    getMatches();
+    getUsers();
+  };
 
   if (!user) {
     navigate("/");
@@ -62,7 +81,7 @@ export const Dashboard = () => {
   return (
     <div className="flex gap-6">
       <div className="w-1/3 h-screen">
-        <ChatContainer />
+        <ChatContainer matches={matches} onUpdate={handleUpdate} />
       </div>
 
       <div className="w-2/3 h-screen flex items-center flex-col justify-center overflow-hidden gap-4">
