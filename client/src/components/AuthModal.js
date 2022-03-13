@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { CONFIG } from "../config";
 import { ReactComponent as CloseIcon } from "../images/close.svg";
 import { ReactComponent as FlameIcon } from "../images/flame.svg";
 
@@ -7,25 +9,38 @@ export const AuthModal = ({ onClose, isSignUp }) => {
   const [password, setPassword] = useState(null);
   const [confirmPassword, setConfirmPassword] = useState(null);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isSignUp && password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    const path = isSignUp ? "/signup" : "/login";
+
     try {
-      if (isSignUp && password !== confirmPassword) {
-        setError("Passwords do not match");
-      } else {
-        console.log("api call to create user");
-      }
+      const response = await fetch(`${CONFIG.apiUrl}${path}`, {
+        method: "post",
+        body: JSON.stringify({ email, password }),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+      });
+      const success = response.status === 201;
+
+      if (success) navigate("/onboarding");
     } catch (e) {
       console.log(e);
     }
   };
 
   return (
-    <div
-      className="absolute inset-0 w-full h-full bg-gray-900/80 flex flex-col items-center justify-center"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
+    <div className="absolute inset-0 w-full h-full bg-gray-900/80 flex flex-col items-center justify-center">
       <div className="mx-auto bg-white p-6 rounded-md w-full max-w-[400px] min-h-[300px]">
         <div className="flex items-center">
           <button className="ml-auto" onClick={onClose}>
