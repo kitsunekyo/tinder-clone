@@ -5,7 +5,6 @@ import { CONFIG } from "./config";
 export const authContext = createContext({
   user: [],
   setUser: (user) => {},
-  login: () => {},
   logout: () => {},
 });
 
@@ -37,8 +36,6 @@ export const AuthProvider = ({ children }) => {
     getUser();
   }, [navigate]);
 
-  const login = () => {};
-
   const logout = async () => {
     await fetch(`${CONFIG.apiUrl}/logout`, {
       method: "post",
@@ -49,7 +46,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <authContext.Provider value={{ user, login, logout, setUser }}>
+    <authContext.Provider value={{ user, logout, setUser }}>
       {children}
     </authContext.Provider>
   );
