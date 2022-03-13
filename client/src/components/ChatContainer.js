@@ -8,21 +8,21 @@ export const ChatContainer = () => {
   const [activeTab, setActiveTab] = useState("chat");
 
   return (
-    <div className="bg-white shadow-md h-full">
+    <div className="bg-white shadow-md h-full flex flex-col">
       <ChatHeader />
 
       <div className="flex border-b border-gray-300">
         <button
           onClick={() => setActiveTab("matches")}
           disabled={activeTab === "matches"}
-          className="flex-1 border-b-4 disabled:border-orange-600 disabled:text-black text-xl p-4 border-gray-400 text-gray-400"
+          className="flex-1 border-b-4 disabled:border-orange-600 disabled:text-black p-4 border-gray-400 text-gray-400 hover:text-black transition-colors"
         >
           Matches
         </button>
         <button
           disabled={activeTab === "chat"}
           onClick={() => setActiveTab("chat")}
-          className="flex-1 border-b-4 disabled:border-orange-600 disabled:text-black text-xl p-4 border-gray-400 text-gray-400"
+          className="flex-1 border-b-4 disabled:border-orange-600 disabled:text-black p-4 border-gray-400 text-gray-400 hover:text-black transition-colors"
         >
           Chat
         </button>

@@ -3,7 +3,7 @@ import { ChatInput } from "../components/ChatInput";
 
 export const ChatDisplay = () => {
   return (
-    <div>
+    <div className="flex flex-col flex-grow">
       <Chat />
       <ChatInput />
     </div>

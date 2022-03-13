@@ -92,7 +92,7 @@ app.post("/login", async (req, res) => {
       return res.status(403).send();
     }
 
-    const token = jwt.sign({ sub: user.userId, email: user.email }, SECRET, {
+    const token = jwt.sign({ sub: user.user_id, email: user.email }, SECRET, {
       expiresIn: 60 * 24,
     });
 
