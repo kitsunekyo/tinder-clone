@@ -64,7 +64,6 @@ export const AuthProvider = ({ children }) => {
 
     if (success) {
       getUser();
-      return;
     }
   };
 
