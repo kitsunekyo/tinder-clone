@@ -6,29 +6,6 @@ import { CONFIG } from "../config";
 import { useAuth } from "../AuthProvider";
 import { ChatContainer } from "../components/ChatContainer";
 
-const db = [
-  {
-    name: "Richard Hendricks",
-    url: "https://i.pravatar.cc/600",
-  },
-  {
-    name: "Erlich Bachman",
-    url: "https://i.pravatar.cc/600",
-  },
-  {
-    name: "Monica Hall",
-    url: "https://i.pravatar.cc/600",
-  },
-  {
-    name: "Jared Dunn",
-    url: "https://i.pravatar.cc/600",
-  },
-  {
-    name: "Dinesh Chugtai",
-    url: "https://i.pravatar.cc/600",
-  },
-];
-
 export const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
