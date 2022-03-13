@@ -124,7 +124,6 @@ app.get("/me", (req, res) => {
       await client.connect();
       const db = client.db("tinderclone");
       const users = await db.collection("users");
-      console.log(decoded.sub);
       const user = await users.findOne({ user_id: decoded.sub });
 
       if (!user) {
@@ -169,6 +168,29 @@ app.put("/me", async (req, res) => {
     });
   } catch (e) {
     res.status(500).json(e);
+  }
+});
+
+app.get("/users", async (req, res) => {
+  const client = new MongoClient(uri);
+
+  const genderFilter = req.query.gender;
+  const filter = {
+    ...(genderFilter ? { gender_identity: { $eq: genderFilter } } : undefined),
+  };
+
+  try {
+    await client.connect();
+    const db = client.db("tinderclone");
+    const userDocs = db.collection("users");
+
+    const users = await userDocs.find(filter).toArray();
+
+    return res.json(users);
+  } catch (e) {
+    return res.status(500).json(e);
+  } finally {
+    await client.close();
   }
 });
 

@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import TinderCard from "react-tinder-card";
 
+import { CONFIG } from "../config";
+import { useAuth } from "../AuthProvider";
 import { ChatContainer } from "../components/ChatContainer";
 
 const db = [
@@ -27,7 +30,9 @@ const db = [
 ];
 
 export const Dashboard = () => {
-  const characters = db;
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [users, setUsers] = useState([]);
   const [lastDirection, setLastDirection] = useState(null);
 
   const swiped = (direction, nameToDelete) => {
@@ -39,6 +44,30 @@ export const Dashboard = () => {
     console.log(name + " left the screen!");
   };
 
+  useEffect(() => {
+    if (!user) return;
+
+    const url = new URL(`${CONFIG.apiUrl}/users`);
+    const params = { gender: user?.gender_interest };
+    Object.keys(params).forEach((key) =>
+      url.searchParams.append(key, params[key])
+    );
+
+    const getUsersByGender = async () => {
+      const res = await fetch(url, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      setUsers(data.filter((u) => u.user_id !== user.user_id));
+    };
+    getUsersByGender();
+  }, [user]);
+
+  if (!user) {
+    navigate("/");
+    return null;
+  }
+
   return (
     <div className="flex gap-6">
       <div className="w-1/3 h-screen">
@@ -47,18 +76,18 @@ export const Dashboard = () => {
 
       <div className="w-2/3 h-screen flex items-center flex-col justify-center overflow-hidden gap-4">
         <div className="relative w-[450px] h-[600px] mx-auto">
-          {characters.map((character) => (
+          {users.map((user) => (
             <TinderCard
               className="absolute"
-              key={character.name}
-              onSwipe={(dir) => swiped(dir, character.name)}
-              onCardLeftScreen={() => outOfFrame(character.name)}
+              key={user.first_name}
+              onSwipe={(direction) => swiped(direction, user.first_name)}
+              onCardLeftScreen={() => outOfFrame(user.first_name)}
             >
               <div
-                style={{ backgroundImage: "url(" + character.url + ")" }}
+                style={{ backgroundImage: `url(${user.url})` }}
                 className="relative w-[450px] h-[600px] rounded-2xl bg-cover bg-center flex items-end justify-center shadow-md"
               >
-                <h3 className="text-white">{character.name}</h3>
+                <h3 className="text-white">{user.first_name}</h3>
               </div>
             </TinderCard>
           ))}
