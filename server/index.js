@@ -14,6 +14,7 @@ const requireAuth = require("./middleware/requireAuth");
 const uri = process.env.CONNECTION_STRING;
 const PORT = 8000;
 const SECRET = process.env.SECRET;
+const cookieLifetime = 24 * 2 * 60 * 60 * 1000; // 48h in seconds
 
 const app = express();
 
@@ -42,14 +43,14 @@ app.post("/signup", async (req, res) => {
   }
 
   const user = {
-    user_id,
+    user_id: userId,
     email: sanitizedEmail,
     hashed_password: hash,
   };
 
   const createdUser = await users.insertOne(user);
-  const token = jwt.sign({ sub: user.userId, email: user.email }, SECRET, {
-    expiresIn: 60 * 24,
+  const token = jwt.sign({ sub: userId, email: user.email }, SECRET, {
+    expiresIn: "2 days",
   });
 
   return res
@@ -57,7 +58,7 @@ app.post("/signup", async (req, res) => {
     .cookie("access-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV !== "development",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: cookieLifetime,
     })
     .send();
 });
@@ -82,7 +83,7 @@ app.post("/login", async (req, res) => {
   }
 
   const token = jwt.sign({ sub: user.user_id, email: user.email }, SECRET, {
-    expiresIn: 60 * 24,
+    expiresIn: "2days",
   });
 
   return res
@@ -90,7 +91,7 @@ app.post("/login", async (req, res) => {
     .cookie("access-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV !== "development",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: cookieLifetime,
     })
     .send();
 });
@@ -155,8 +156,8 @@ app.get("/users", async (req, res) => {
 
   const potentialMatches = users.filter(
     (user) =>
-      !requestingUser.likes.includes(user.user_id) &&
-      !requestingUser.dislikes.includes(user.user_id)
+      !requestingUser.likes?.includes(user.user_id) &&
+      !requestingUser.dislikes?.includes(user.user_id)
   );
 
   return res.json(potentialMatches);
@@ -196,6 +197,11 @@ app.get("/matches", async (req, res) => {
   const userDocs = db.collection("users");
 
   const user = await userDocs.findOne({ user_id: userId });
+
+  if (!user.likes) {
+    return res.send([]);
+  }
+
   const likedUsers = await userDocs
     .find({ user_id: { $in: user.likes } })
     .toArray();

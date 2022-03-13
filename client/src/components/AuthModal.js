@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CONFIG } from "../config";
+import { useAuth } from "../AuthProvider";
 import { ReactComponent as CloseIcon } from "../images/close.svg";
 import { ReactComponent as FlameIcon } from "../images/flame.svg";
 
@@ -9,6 +9,7 @@ export const AuthModal = ({ onClose, isSignUp }) => {
   const [password, setPassword] = useState(null);
   const [confirmPassword, setConfirmPassword] = useState(null);
   const [error, setError] = useState(null);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -18,24 +19,15 @@ export const AuthModal = ({ onClose, isSignUp }) => {
       setError("Passwords do not match");
       return;
     }
-
-    const path = isSignUp ? "/signup" : "/login";
-
     try {
-      const response = await fetch(`${CONFIG.apiUrl}${path}`, {
-        method: "post",
-        body: JSON.stringify({ email, password }),
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        credentials: "include",
-      });
-      const success = response.status === 201;
-
-      if (success) navigate("/onboarding");
+      await login(email, password, isSignUp);
+      if (isSignUp) {
+        navigate("/onboarding");
+        return;
+      }
+      navigate("/dashboard");
     } catch (e) {
-      console.log(e);
+      console.log("something went wrong");
     }
   };
 
