@@ -26,7 +26,6 @@ export const Home = () => {
         if (data) {
           console.log("User is logged in");
           setUser(data);
-          navigate("/dashboard");
           return;
         }
       } catch (e) {
