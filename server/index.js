@@ -12,7 +12,7 @@ const { getDb, close } = require("./db");
 const requireAuth = require("./middleware/requireAuth");
 
 const uri = process.env.CONNECTION_STRING;
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 const SECRET = process.env.SECRET;
 const cookieLifetime = 24 * 2 * 60 * 60 * 1000; // 48h in seconds
 
