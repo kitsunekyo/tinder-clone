@@ -27,6 +27,7 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+app.set("trust proxy", 1);
 
 app.post("/signup", async (req, res) => {
   const db = await getDb();
@@ -57,9 +58,10 @@ app.post("/signup", async (req, res) => {
   return res
     .status(201)
     .cookie("access-token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== "development",
+      // httpOnly: true,
       maxAge: cookieLifetime,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     })
     .send();
 });
@@ -90,9 +92,10 @@ app.post("/login", async (req, res) => {
   return res
     .status(201)
     .cookie("access-token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== "development",
+      // httpOnly: true,
       maxAge: cookieLifetime,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     })
     .send();
 });
