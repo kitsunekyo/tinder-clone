@@ -14,13 +14,14 @@ const requireAuth = require("./middleware/requireAuth");
 const uri = process.env.CONNECTION_STRING;
 const PORT = process.env.PORT || 8000;
 const SECRET = process.env.SECRET;
+const FRONTEND_URL = process.env.FRONTEND_URL;
 const cookieLifetime = 24 * 2 * 60 * 60 * 1000; // 48h in seconds
 
 const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: FRONTEND_URL || "http://localhost:3000",
     credentials: true,
   })
 );
