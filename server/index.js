@@ -97,13 +97,11 @@ app.post("/login", async (req, res) => {
     .send();
 });
 
-app.use(requireAuth);
-
-app.post("/logout", (req, res) => {
+app.post("/logout", requireAuth, (req, res) => {
   return res.clearCookie("access-token").end();
 });
 
-app.get("/me", async (req, res) => {
+app.get("/me", requireAuth, async (req, res) => {
   const db = await getDb();
 
   const users = await db.collection("users");
@@ -118,7 +116,7 @@ app.get("/me", async (req, res) => {
   res.json(safeUser);
 });
 
-app.put("/me", async (req, res) => {
+app.put("/me", requireAuth, async (req, res) => {
   const db = await getDb();
 
   const userDocs = db.collection("users");
@@ -133,7 +131,7 @@ app.put("/me", async (req, res) => {
   return res.status(204).send();
 });
 
-app.get("/users", async (req, res) => {
+app.get("/users", requireAuth, async (req, res) => {
   const db = await getDb();
 
   const requestingUserId = req.user.userId;
@@ -164,7 +162,7 @@ app.get("/users", async (req, res) => {
   return res.json(potentialMatches);
 });
 
-app.post("/swipe", async (req, res) => {
+app.post("/swipe", requireAuth, async (req, res) => {
   const db = await getDb();
 
   const userId = req.user.userId;
@@ -192,7 +190,7 @@ app.post("/swipe", async (req, res) => {
   return res.status(201).send();
 });
 
-app.delete("/matches", async (req, res) => {
+app.delete("/matches", requireAuth, async (req, res) => {
   const db = await getDb();
 
   const userId = req.user.userId;
@@ -220,7 +218,7 @@ app.delete("/matches", async (req, res) => {
   return res.status(200).send();
 });
 
-app.get("/matches", async (req, res) => {
+app.get("/matches", requireAuth, async (req, res) => {
   const db = await getDb();
   const userId = req.user.userId;
   const userDocs = db.collection("users");
@@ -247,7 +245,7 @@ app.get("/matches", async (req, res) => {
   return res.json(sanitizedMatches);
 });
 
-app.get("/messages/:partnerId", async (req, res) => {
+app.get("/messages/:partnerId", requireAuth, async (req, res) => {
   const db = await getDb();
   const userId = req.user.userId;
   const partnerId = req.params.partnerId;
